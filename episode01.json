@@ -1,0 +1,56 @@
+{
+  "series": "Кот Барсик",
+  "episode": 1,
+  "title": "Зачем коты ложатся на ноутбук",
+  "format": { "w": 1080, "h": 1920, "fps": 30 },
+  "hook": "ЗАЧЕМ КОТЫ ЛОЖАТСЯ НА НОУТБУК",
+  "character": "Barsik, a chunky orange tabby cat with a white muzzle, white chest and white front paws, big round amber eyes, a small notch in his left ear, and a permanently grumpy deadpan expression",
+  "character_prompt": "Full-body 2D cartoon character sheet of Barsik, a chunky orange tabby cat with a white muzzle, white chest and white front paws, big round amber eyes, a small notch in his left ear, permanently grumpy deadpan expression. Modern flat cartoon illustration, bold clean black outlines, flat vibrant colors, cute but unimpressed. Plain light mint background, centered, vertical 9:16 composition.",
+  "image_style": "Modern 2D flat cartoon illustration, bold clean black outlines, flat vibrant colors, expressive, high quality, vertical 9:16 composition",
+  "shots": [
+    {
+      "id": "s1",
+      "motion": "ai",
+      "image_prompt": "Barsik, a chunky orange tabby cat with a white muzzle, white chest and white paws, big round amber eyes, small notch in his left ear, grumpy deadpan expression, sprawled defiantly on top of an open silver laptop on a wooden home desk, his fat body covering the keyboard, a wall clock behind. A steaming mug and helpless human hands at the edge of the desk. Cozy morning apartment, warm light. Modern 2D flat cartoon illustration, bold clean black outlines, flat vibrant colors, vertical 9:16 composition.",
+      "video_prompt": "subtle motion: the fat orange cat's tail flicks lazily, gentle slow camera push-in, steam rises from the coffee mug, soft warm morning light",
+      "narration": "Учёные наконец выяснили, зачем коты ложатся на ноутбук. Барсик делает так уже три года. Каждое утро. Ровно в девять.",
+      "caption": "Каждое утро. Ровно в девять."
+    },
+    {
+      "id": "s2",
+      "image_prompt": "Barsik, a chunky orange tabby cat with a white muzzle, white chest and white paws, big round amber eyes, small notch in his left ear, grumpy deadpan expression, lying perfectly on a warm laptop, eyes half closed, basking in the soft glow of the screen, smug and cozy, warm orange light on his fur. Modern 2D flat cartoon illustration, bold clean black outlines, flat vibrant colors, vertical 9:16 composition.",
+      "video_prompt": "slow zoom in, the cat blinks slowly, screen glow gently pulses on his fur, cozy and warm, subtle motion",
+      "narration": "Сначала мы думали: ему просто тепло.",
+      "caption": "«Ему просто тепло»"
+    },
+    {
+      "id": "s3",
+      "image_prompt": "Close-up of Barsik, a chunky orange tabby cat with a white muzzle, white chest and white paws, big round amber eyes, small notch in his left ear, staring directly at the viewer with an extremely unimpressed deadpan expression, one eyebrow slightly raised. Plain warm background. Modern 2D flat cartoon illustration, bold clean black outlines, flat vibrant colors, vertical 9:16 composition.",
+      "video_prompt": "slow push in on the cat's face, he blinks once, one ear twitches, deadpan stare into the camera, subtle motion",
+      "narration": "Потом — что ему просто нужно внимание.",
+      "caption": "«Ему нужно внимание»"
+    },
+    {
+      "id": "s4",
+      "image_prompt": "Fisheye security-camera point of view of a living room at night, an open laptop glowing on a wooden desk, Barsik the chunky orange tabby cat with white muzzle and paws, small notch in his left ear, sneaking toward the laptop with a mischievous sly look. Grainy green-grey CCTV look, subtle vignette and scanlines. Modern 2D flat cartoon illustration, bold clean black outlines, vertical 9:16 composition.",
+      "video_prompt": "security camera footage, slight CCTV shake and static, the tabby cat creeps forward toward the glowing laptop, suspenseful, subtle motion",
+      "narration": "И тогда я спрятал в комнате камеру.",
+      "caption": "Я спрятал камеру..."
+    },
+    {
+      "id": "s5",
+      "image_prompt": "Barsik, a chunky orange tabby cat with a white muzzle, white chest and white paws, big round amber eyes, small notch in his left ear, sitting alone at an open laptop, one paw on the keyboard, the screen filled with a grid of photos of a fluffy white cat and floating pink hearts, Barsik grinning mischievously. Dark room lit by the screen glow. Modern 2D flat cartoon illustration, bold clean black outlines, flat vibrant colors, vertical 9:16 composition.",
+      "video_prompt": "the cat's paw taps the keyboard, glowing hearts gently float up from the screen, subtle camera drift, mischievous mood",
+      "narration": "И увидел. Барсик ставит лайки всем фотографиям соседской кошки Муси. Двадцать пять тысяч лайков.",
+      "caption": "25 000 лайков. Мусе."
+    },
+    {
+      "id": "s6",
+      "image_prompt": "Barsik, a chunky orange tabby cat with a white muzzle, white chest and white paws, big round amber eyes, small notch in his left ear, looking extremely smug and unrepentant, sitting next to an open laptop showing a credit card payment screen, several delivery boxes of cat food piled around him, arms crossed, dramatic lighting. Modern 2D flat cartoon illustration, bold clean black outlines, flat vibrant colors, vertical 9:16 composition.",
+      "video_prompt": "the smug orange cat slowly turns his head to the camera and smirks, slight push in, delivery boxes behind him, dramatic light",
+      "narration": "А потом он заказал ей корм за четыре тысячи рублей. С моей карты. И ни о чём не жалеет.",
+      "caption": "4 000 ₽. С моей карты."
+    }
+  ],
+  "outro": "Барсик ни о чём не жалеет. Подпишись — узнаешь, что он сделал с паспортом."
+}

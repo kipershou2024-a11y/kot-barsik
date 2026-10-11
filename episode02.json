@@ -1,0 +1,56 @@
+{
+  "series": "Кот Барсик",
+  "episode": 2,
+  "title": "Барсик устроился на работу",
+  "format": { "w": 1080, "h": 1920, "fps": 30 },
+  "hook": "ЧТО БАРСИК СДЕЛАЛ С ПАСПОРТОМ",
+  "character": "Barsik, a chunky orange tabby cat with a white muzzle, white chest and white front paws, big round amber eyes, a small notch in his left ear, and a permanently grumpy deadpan expression",
+  "character_prompt": "Full-body 2D cartoon character sheet of Barsik, a chunky orange tabby cat with a white muzzle, white chest and white front paws, big round amber eyes, a small notch in his left ear, permanently grumpy deadpan expression. Modern flat cartoon illustration, bold clean black outlines, flat vibrant colors, cute but unimpressed. Plain light mint background, centered, vertical 9:16 composition.",
+  "image_style": "Modern 2D flat cartoon illustration, bold clean black outlines, flat vibrant colors, expressive, high quality, vertical 9:16 composition",
+  "shots": [
+    {
+      "id": "s1",
+      "motion": "kenburns",
+      "image_prompt": "Barsik, a chunky orange tabby cat with a white muzzle, white chest and white paws, big round amber eyes, small notch in his left ear, grumpy deadpan face, sitting proudly on top of an open human passport and scattered documents on a wooden desk, one paw flat on the passport, smug teasing look at the viewer, dramatic spotlight from above, dark office background. Modern 2D flat cartoon illustration, bold clean black outlines, flat vibrant colors, vertical 9:16 composition.",
+      "video_prompt": "slow dramatic push-in, the orange cat blinks and smirks, papers shift slightly, dramatic spotlight pulse, subtle motion",
+      "narration": "Итак. Вы просили рассказать, что Барсик сделал с моим паспортом. Отвечаю.",
+      "caption": "Что Барсик сделал с паспортом"
+    },
+    {
+      "id": "s2",
+      "image_prompt": "Barsik, a chunky orange tabby cat with a white muzzle, white chest and white paws, big round amber eyes, small notch in his left ear, grumpy deadpan face, wearing a tiny red necktie, sitting at an open laptop in a cozy room, the screen glowing with a celebratory job-offer notification and confetti, shocked then curious expression. Modern 2D flat cartoon illustration, bold clean black outlines, flat vibrant colors, vertical 9:16 composition.",
+      "video_prompt": "none",
+      "narration": "В четверг мне позвонили из банка и сказали: поздравляем, вы приняты на работу.",
+      "caption": "«Вас приняли на работу»"
+    },
+    {
+      "id": "s3",
+      "image_prompt": "Close-up of Barsik, a chunky orange tabby cat with a white muzzle and white paws, big round amber eyes, small notch in his left ear, one eyebrow raised, holding an old landline phone receiver to his ear, extremely suspicious unimpressed look. Plain warm background. Modern 2D flat cartoon illustration, bold clean black outlines, flat vibrant colors, vertical 9:16 composition.",
+      "video_prompt": "none",
+      "narration": "Я никуда не устраивался. Первая мысль: мошенники.",
+      "caption": "Мошенники?!"
+    },
+    {
+      "id": "s4",
+      "image_prompt": "Barsik, a chunky orange tabby cat with a white muzzle, white chest and white paws, big round amber eyes, small notch in his left ear, wearing a small blue necktie and a white badge label, standing proudly in a colorful cartoon office with a desk, computer and potted plant, looking satisfied. Modern 2D flat cartoon illustration, bold clean black outlines, flat vibrant colors, vertical 9:16 composition.",
+      "video_prompt": "none",
+      "narration": "Но потом я увидел фото новичка в рабочем чате. Это был Барсик. В галстуке.",
+      "caption": "Новичок. Барсик. В галстуке."
+    },
+    {
+      "id": "s5",
+      "image_prompt": "Close-up scene: an open human passport lies under a fingerprint scanner, next to it a big orange cat paw stamped like an official approval, Barsik the chunky orange tabby cat raising one paw with a sly grin, glass scanner glowing with digital lines, office tech vibe. Modern 2D flat cartoon illustration, bold clean black outlines, flat vibrant colors, vertical 9:16 composition.",
+      "video_prompt": "none",
+      "narration": "Он приложил мой паспорт к сканеру, а вместо подписи поставил отпечаток лапы. Система приняла.",
+      "caption": "Отпечаток лапы. Система приняла."
+    },
+    {
+      "id": "s6",
+      "image_prompt": "Barsik, a chunky orange tabby cat with a white muzzle, white chest and white paws, big round amber eyes, small notch in his left ear, in a red necktie, working at a laptop late at night, surrounded by piles of cat food bowls and delivery boxes, extremely smug and unrepentant, screen glow on his face. Modern 2D flat cartoon illustration, bold clean black outlines, flat vibrant colors, vertical 9:16 composition.",
+      "video_prompt": "none",
+      "narration": "Теперь он ходит на удалёнку. Зарплату получает кормом. И ни о чём не жалеет.",
+      "caption": "Зарплата — кормом."
+    }
+  ],
+  "outro": "Подпишись. Скоро Барсик сдаёт на права."
+}

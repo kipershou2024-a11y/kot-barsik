@@ -1,0 +1,6 @@
+yt_token.json
+push_and_setup.py
+build/
+assets/
+__pycache__/
+.env
