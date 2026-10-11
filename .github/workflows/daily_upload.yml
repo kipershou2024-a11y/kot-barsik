@@ -1,0 +1,32 @@
+name: Daily Barsik Short Auto-Pilot
+
+on:
+  schedule:
+    - cron: '0 10 * * *' # Every day at 10:00 UTC
+    - cron: '0 18 * * *' # Every day at 18:00 UTC (8 hours later)
+  workflow_dispatch:     # Allow manual trigger from GitHub UI
+
+jobs:
+  build-and-upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Restore yt_token.json from Secret
+        run: |
+          echo '${{ secrets.YT_TOKEN_JSON }}' > yt_token.json
+
+      - name: Run Auto Generator
+        env:
+          FISH_API_KEY: ${{ secrets.FISH_API_KEY }}
+        run: |
+          python auto_generator.py
