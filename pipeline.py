@@ -150,12 +150,21 @@ def pollinations_generate(prompt, out_path, seed=42):
     if out_path.exists() and out_path.stat().st_size > 1000:
         log(f"skip existing {out_path.name}")
         return out_path
-    import urllib.parse
+    import urllib.parse, time
     full_prompt = prompt + ", 2D flat cartoon illustration, bold clean black outlines, flat vibrant colors, vertical 9:16 composition"
     url = f"https://image.pollinations.ai/prompt/{urllib.parse.quote(full_prompt)}?width=1080&height=1920&nologo=true&seed={seed}"
-    urllib.request.urlretrieve(url, str(out_path))
-    log(f"pollinations done -> {out_path.name} ({out_path.stat().st_size} bytes)")
-    return out_path
+    for attempt in range(3):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": UA})
+            with urllib.request.urlopen(req, timeout=120) as resp:
+                out_path.write_bytes(resp.read())
+            time.sleep(12)
+            log(f"pollinations done -> {out_path.name} ({out_path.stat().st_size} bytes)")
+            return out_path
+        except Exception as e:
+            log(f"pollinations attempt {attempt} failed: {e}, retrying in 10s...")
+            time.sleep(10)
+    raise RuntimeError("Pollinations failed after retries")
 
 def gen_char(ep):
     out = IMAGES / "char_master.png"

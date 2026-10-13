@@ -1,102 +1,167 @@
 import json
 import os
+import subprocess
 from pathlib import Path
 import pipeline
 import yt_upload
 
-CHARACTER_PROMPT = "Full-body 2D cartoon character sheet of Barsik, a chunky orange tabby cat with a white muzzle, white chest and white front paws, big round amber eyes, a small notch in his left ear, permanently grumpy deadpan expression. Modern flat cartoon illustration, bold clean black outlines, flat vibrant colors, cute but unimpressed. Plain light mint background, centered, vertical 9:16 composition."
+ROOT = Path(__file__).resolve().parent
 
 IDEAS = [
     {
         "episode": 3,
         "title": "Барсик сдаёт на права",
         "hook": "БАРСИК СДАЁТ НА ПРАВА",
-        "character_prompt": CHARACTER_PROMPT,
         "shots": [
             {
-                "id": "s1",
-                "image_prompt": "Barsik the chunky orange tabby cat wearing a tiny driver cap, sitting behind the steering wheel of a car, looking deadpan and serious at the road. Modern 2D flat cartoon illustration, bold clean outlines, vertical 9:16.",
+                "id": "ep3_s1",
+                "image_source": "assets/images/char_master.png",
                 "narration": "Вчера Барсик записался в автошколу. Инспектор был в шоке.",
                 "caption": "Барсик в автошколе"
             },
             {
-                "id": "s2",
-                "image_prompt": "Barsik the chunky orange tabby cat failing parallel parking, hitting three traffic cones while looking smug. Modern 2D flat cartoon illustration, bold clean outlines, vertical 9:16.",
+                "id": "ep3_s2",
+                "image_source": "assets/images/char_master.png",
                 "narration": "Сдавал площадку три раза. Сбил все конусы, но сдал теорию по мурчанию.",
                 "caption": "Сбил все конусы"
             },
             {
-                "id": "s3",
-                "image_prompt": "Barsik holding a driver license showing a cat paw print instead of photo, looking extremely proud in a car. Modern 2D flat cartoon illustration, bold clean outlines, vertical 9:16.",
+                "id": "ep3_s3",
+                "image_source": "assets/images/char_master.png",
                 "narration": "Теперь у него официальные права. В графе особые отметки — любит рыбу.",
                 "caption": "Официальные права"
             },
             {
-                "id": "s4",
-                "image_prompt": "Barsik driving a red sports car at high speed, wind blowing his whiskers, pedestrians running away. Modern 2D flat cartoon illustration, bold clean outlines, vertical 9:16.",
+                "id": "ep3_s4",
+                "image_source": "assets/images/char_master.png",
                 "narration": "Берегитесь дороги. Барсик за рулем и он спешит к миске.",
                 "caption": "Берегитесь дороги!"
             }
         ],
         "outro": "Подпишись — завтра Барсик оформляет ипотеку."
-    },
-    {
-        "episode": 4,
-        "title": "Барсик завёл Tinder",
-        "hook": "БАРСИК В TINDER",
-        "character_prompt": CHARACTER_PROMPT,
-        "shots": [
-            {
-                "id": "s1",
-                "image_prompt": "Barsik the chunky orange tabby cat swiping left and right on a smartphone screen showing cat profiles, looking very picky. Modern 2D flat cartoon illustration, bold clean outlines, vertical 9:16.",
-                "narration": "Ночью Барсик украл телефон и завел аккаунт в Тиндере.",
-                "caption": "Барсик в Тиндере"
-            },
-            {
-                "id": "s2",
-                "image_prompt": "Smartphone screen showing Barsik's bio: Chunky, wealthy, owns 3 boxes, looking for a rich cat with fish. Modern 2D flat cartoon illustration, bold clean outlines, vertical 9:16.",
-                "narration": "В описании указал: Красив, толст, владею тремя коробками, ищу спонсора с креветками.",
-                "caption": "Ищу спонсора с креветками"
-            },
-            {
-                "id": "s3",
-                "image_prompt": "Barsik's phone buzzing with thousands of match notifications, cat looking overwhelmed and smug. Modern 2D flat cartoon illustration, bold clean outlines, vertical 9:16.",
-                "narration": "За пять минут — сто матчей. Соседский мейн-кун уже прислал предложение руки и сердца.",
-                "caption": "100 матчей за 5 минут"
-            },
-            {
-                "id": "s4",
-                "image_prompt": "Barsik deleting the app and going back to sleep in a cardboard box, peaceful expression. Modern 2D flat cartoon illustration, bold clean outlines, vertical 9:16.",
-                "narration": "Но он удалил приложение. Слишком много сообщений, а спать хочется больше.",
-                "caption": "Сон важнее любви"
-            }
-        ],
-        "outro": "Подпишись — завтра Барсик захватывает робот-пылесос."
     }
 ]
 
 def main():
     out_dir = Path("out")
     out_dir.mkdir(exist_ok=True)
-    existing = list(out_dir.glob("episode*.mp4"))
-    idx = len(existing) % len(IDEAS)
-    ep = IDEAS[idx]
-    
+    ep = IDEAS[0]
     ep["format"] = {"w": 1080, "h": 1920, "fps": 30}
     ep["character"] = "Barsik"
     
-    ep_file = Path("current_episode.json")
-    ep_file.write_text(json.dumps(ep, ensure_ascii=False, indent=2), encoding="utf-8")
-    
+    import shutil
+    for shot in ep["shots"]:
+        src = Path(shot["image_source"])
+        dst = pipeline.IMAGES / f"{shot['id']}.png"
+        shutil.copy(src, dst)
+        
     print(f"Generating Episode {ep['episode']}: {ep['title']}")
-    pipeline.gen_char(ep)
-    pipeline.gen_images(ep)
-    pipeline.gen_clips(ep)
     pipeline.gen_voice(ep)
-    final_mp4 = pipeline.assemble(ep)
     
-    thumb = Path("build/auto_thumb.jpg")
-    import subprocess
+    fmt = ep["format"]
+    W, H, FPS = fmt["w"], fmt["h"], fmt["fps"]
+    pipeline.BUILD.mkdir(exist_ok=True)
+    
+    font = pipeline.BUILD / "font.ttf"
+    if not font.exists():
+        for cand in [r"C:\Windows\Fonts\arialbd.ttf", r"C:\Windows\Fonts\arial.ttf"]:
+            if Path(cand).exists():
+                shutil.copy(cand, font)
+                break
+
+    segments = []
+    timeline = []
+    t = 0.0
+    for idx, shot in enumerate(ep["shots"]):
+        narr = pipeline.AUDIO / f"{shot['id']}.mp3"
+        ndur = pipeline.probe_duration(narr)
+        dur = max(ndur + 0.55, 0.6)
+        seg = pipeline.BUILD / f"seg_ep3_{idx}.mp4"
+        img = pipeline.IMAGES / f"{shot['id']}.png"
+        
+        frames = max(int(dur * FPS), 2)
+        step = 0.17 / frames
+        vf = (
+            f"scale=2160:3840:force_original_aspect_ratio=increase,"
+            f"crop=2160:3840,"
+            f"zoompan=z='min(zoom+{step:.6f},1.17)':d=1:"
+            f"x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':"
+            f"s={W}x{H}:fps={FPS},setsar=1,format=yuv420p"
+        )
+        pipeline._ffmpeg([
+            "-loop", "1", "-framerate", str(FPS), "-t", f"{dur:.3f}",
+            "-i", str(img), "-i", str(narr),
+            "-filter_complex", f"[0:v]{vf}[v]",
+            "-map", "[v]", "-map", "1:a", "-t", f"{dur:.3f}",
+            "-c:v", "libx264", "-preset", "medium", "-crf", "20",
+            "-c:a", "aac", "-b:a", "160k", "-ar", "44100", "-ac", "2",
+            str(seg),
+        ])
+        segments.append(seg)
+        cap = shot.get("caption") or shot.get("narration")
+        timeline.append((t, t + ndur, cap))
+        t += dur
+
+    outro = pipeline.AUDIO / "outro.mp3"
+    if outro.exists():
+        last_shot = ep["shots"][-1]
+        odur = pipeline.probe_duration(outro)
+        img = pipeline.IMAGES / f"{last_shot['id']}.png"
+        seg = pipeline.BUILD / "seg_ep3_outro.mp4"
+        frames = max(int((odur + 0.5) * FPS), 2)
+        step = 0.17 / frames
+        vf = (
+            f"scale=2160:3840:force_original_aspect_ratio=increase,"
+            f"crop=2160:3840,"
+            f"zoompan=z='min(zoom+{step:.6f},1.17)':d=1:"
+            f"x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':"
+            f"s={W}x{H}:fps={FPS},setsar=1,format=yuv420p"
+        )
+        pipeline._ffmpeg([
+            "-loop", "1", "-framerate", str(FPS), "-t", f"{odur + 0.5:.3f}",
+            "-i", str(img), "-i", str(outro),
+            "-filter_complex", f"[0:v]{vf}[v]",
+            "-map", "[v]", "-map", "1:a", "-t", f"{odur + 0.5:.3f}",
+            "-c:v", "libx264", "-preset", "medium", "-crf", "20",
+            "-c:a", "aac", "-b:a", "160k", "-ar", "44100", "-ac", "2",
+            str(seg),
+        ])
+        timeline.append((t, t + odur, ep["outro"]))
+        segments.append(seg)
+
+    lst = pipeline.BUILD / "concat3.txt"
+    lst.write_text("".join(f"file '{s.name}'\n" for s in segments), encoding="utf-8")
+    joined = pipeline.BUILD / "joined3.mp4"
+    pipeline._ffmpeg(["-f", "concat", "-safe", "0", "-i", "concat3.txt", "-c", "copy", joined.name], cwd=pipeline.BUILD)
+
+    filters = []
+    for i, (a, b, cap) in enumerate(timeline):
+        txt = pipeline.BUILD / f"cap3_{i}.txt"
+        txt.write_text(cap, encoding="utf-8")
+        filters.append(
+            f"drawtext=fontfile=font.ttf:textfile=cap3_{i}.txt:"
+            f"fontcolor=white:fontsize=52:line_spacing=8:"
+            f"borderw=5:bordercolor=black@0.85:"
+            f"box=0:x=(w-text_w)/2:y=h-420:"
+            f"enable='between(t,{a:.2f},{b:.2f})'"
+        )
+    if ep.get("hook"):
+        (pipeline.BUILD / "hook3.txt").write_text(ep["hook"], encoding="utf-8")
+        filters.append(
+            "drawtext=fontfile=font.ttf:textfile=hook3.txt:"
+            "fontcolor=0xFFE24B:fontsize=72:borderw=6:bordercolor=black@0.9:"
+            "x=(w-text_w)/2:y=150:enable='lt(t,4)'"
+        )
+    final_mp4 = ROOT / "out" / f"episode03.mp4"
+    pipeline._ffmpeg([
+        "-i", joined.name,
+        "-vf", ",".join(filters),
+        "-c:v", "libx264", "-preset", "medium", "-crf", "19", "-pix_fmt", "yuv420p",
+        "-c:a", "copy",
+        str(final_mp4),
+    ], cwd=pipeline.BUILD)
+    
+    thumb = Path("build/auto_thumb3.jpg")
     subprocess.run([
         "ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-ss", "5", "-i", str(final_mp4),
         "-frames:v", "1", "-vf", "scale=720:1280", str(thumb)
@@ -107,9 +172,7 @@ def main():
         desc = f"Новые приключения кота Барсика! Подписывайся на канал! #shorts #котбарсик #мультик #юмор #котики"
         tags = "shorts,кот барсик,мультик про кота,котики,смешной кот,юмор"
         vid = yt_upload.upload_video(str(final_mp4), title, desc, tags.split(","), 23, str(thumb), "public")
-        print(f"Uploaded successfully: https://youtu.be/{vid}")
-    else:
-        print("yt_token.json not found, skipping upload (local dry run).")
+        print(f"Uploaded Episode 3 successfully: https://youtu.be/{vid}")
 
 if __name__ == "__main__":
     main()
