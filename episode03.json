@@ -1,0 +1,49 @@
+{
+  "series": "Кот Барсик",
+  "episode": 3,
+  "title": "Барсик сдаёт на права",
+  "format": { "w": 1080, "h": 1920, "fps": 30 },
+  "hook": "БАРСИК СДАЁТ НА ПРАВА",
+  "character": "Barsik, a chunky orange tabby cat with a white muzzle, white chest and white front paws, big round amber eyes, a small notch in his left ear, and a permanently grumpy deadpan expression",
+  "character_prompt": "Full-body 2D cartoon character sheet of Barsik, a chunky orange tabby cat with a white muzzle, white chest and white front paws, big round amber eyes, a small notch in his left ear, permanently grumpy deadpan expression. Modern flat cartoon illustration, bold clean black outlines, flat vibrant colors, cute but unimpressed. Plain light mint background, centered, vertical 9:16 composition.",
+  "image_style": "Modern 2D flat cartoon illustration, bold clean black outlines, flat vibrant colors, expressive, high quality, vertical 9:16 composition",
+  "shots": [
+    {
+      "id": "e3_1",
+      "image_prompt": "Barsik, a chunky orange tabby cat with a white muzzle, white chest and white paws, big round amber eyes, small notch in his left ear, grumpy deadpan face, sitting behind the steering wheel of a small cartoon car wearing a tiny black driver cap, one paw on the wheel, comically serious. A shocked driving instructor cat with glasses in the passenger seat. Modern 2D flat cartoon illustration, bold clean black outlines, flat vibrant colors, vertical 9:16 composition.",
+      "narration": "Итак, вы просили. Барсик записался в автошколу. Инспектор до сих пор не пришёл в себя после первого занятия.",
+      "caption": "Барсик в автошколе"
+    },
+    {
+      "id": "e3_2",
+      "image_prompt": "Close-up of Barsik, a chunky orange tabby cat with a white muzzle and white paws, big round amber eyes, small notch in his left ear, one eyebrow raised, holding an open traffic-rules book with street signs, extremely unimpressed suspicious look, sitting at a small desk. Modern 2D flat cartoon illustration, bold clean black outlines, flat vibrant colors, vertical 9:16 composition.",
+      "narration": "Сначала теория. Двести билетов про знаки и светофоры. Он сдал с первого раза. Три года смотрел, как я паркуюсь.",
+      "caption": "Теория — с первого раза"
+    },
+    {
+      "id": "e3_3",
+      "image_prompt": "Barsik, a chunky orange tabby cat with a white muzzle, white chest and white paws, big round amber eyes, small notch in his left ear, driving a small car and knocking over orange traffic cones on a driving-test course, cones flying everywhere, panicked wide eyes, a clipboard-holding examiner cat watching in despair. Modern 2D flat cartoon illustration, bold clean black outlines, flat vibrant colors, vertical 9:16 composition.",
+      "narration": "А вот с площадкой не задалось. Он сбил все конусы. Разворот в три приёма превратился в девять.",
+      "caption": "Сбил все конусы"
+    },
+    {
+      "id": "e3_4",
+      "image_prompt": "Barsik, a chunky orange tabby cat with a white muzzle, white chest and white paws, big round amber eyes, small notch in his left ear, proudly holding up a driving license showing a cat paw print instead of a photo, smug satisfied grin, official stamp in the corner, celebratory confetti. Modern 2D flat cartoon illustration, bold clean black outlines, flat vibrant colors, vertical 9:16 composition.",
+      "narration": "И тогда инспектор просто поставил печать и выдал права. В графе особые отметки — любит рыбу.",
+      "caption": "Официальные права"
+    },
+    {
+      "id": "e3_5",
+      "image_prompt": "Barsik, a chunky orange tabby cat with a white muzzle and white paws, big round amber eyes, grumpy deadpan face, driving a tiny red sports car very fast on a highway, wind blowing his whiskers, speed lines, sunset in the background, one paw out of the window. Modern 2D flat cartoon illustration, bold clean black outlines, flat vibrant colors, vertical 9:16 composition.",
+      "narration": "Теперь он гоняет по трассе как настоящий стритрейсер. И требует, чтобы машину мыл именно я.",
+      "caption": "Гоняет по трассе"
+    },
+    {
+      "id": "e3_6",
+      "image_prompt": "Barsik, a chunky orange tabby cat with a white muzzle, white chest and white paws, big round amber eyes, small notch in his left ear, sitting smug and unrepentant in a small car, dangling a set of car keys on one paw, dramatic spotlight from above, dark background. Modern 2D flat cartoon illustration, bold clean black outlines, flat vibrant colors, vertical 9:16 composition.",
+      "narration": "И знаете что? Он ни о чём не жалеет. Только теперь за руль пускают его одного.",
+      "caption": "Ни о чём не жалеет."
+    }
+  ],
+  "outro": "Подпишись — узнаешь, зачем Барсик купил мотоцикл."
+}

@@ -31,10 +31,13 @@ OUT = ROOT / "out"
 
 MAGE_BASE = "https://api.mage.space/v1"
 FISH_BASE = "https://api.fish.audio/v1"
+HF_BASE = "https://router.huggingface.co/hf-inference/models"
 UA = "curl/8.21.0"
 
 MAGE_KEY = os.environ.get("MAGE_API_KEY", "").strip()
 FISH_KEY = os.environ.get("FISH_API_KEY", "").strip()
+HF_KEY = os.environ.get("HF_TOKEN", "").strip()
+HF_MODEL = os.environ.get("HF_IMAGE_MODEL", "black-forest-labs/FLUX.1-schnell")
 
 IMAGE_MODEL = "gpt_image_2"
 VIDEO_MODEL = "ltx_video"
@@ -145,6 +148,80 @@ def load_episode(path=None):
 
 # ---------------------------------------------------------------- generators
 
+_LOCAL_PIPE = None
+
+def local_generate(prompt, out_path, seed=42, width=512, height=896, steps=4):
+    """Free, offline image generation on CPU (stabilityai/sd-turbo, few-step)."""
+    global _LOCAL_PIPE
+    out_path = Path(out_path)
+    if out_path.exists() and out_path.stat().st_size > 1000:
+        log(f"skip existing {out_path.name}")
+        return out_path
+    import torch
+    from diffusers import AutoPipelineForText2Image
+    if _LOCAL_PIPE is None:
+        model = os.environ.get("LOCAL_IMAGE_MODEL", "stabilityai/sd-turbo")
+        log(f"loading local model {model} (first run downloads weights)...")
+        _LOCAL_PIPE = AutoPipelineForText2Image.from_pretrained(
+            model, torch_dtype=torch.float32)
+        _LOCAL_PIPE = _LOCAL_PIPE.to("cpu")
+    gen = torch.Generator("cpu").manual_seed(seed)
+    image = _LOCAL_PIPE(
+        prompt=prompt, num_inference_steps=steps, guidance_scale=0.0,
+        width=width, height=height, generator=gen).images[0]
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    image.save(out_path)
+    log(f"local done -> {out_path.name} ({out_path.stat().st_size} bytes)")
+    return out_path
+
+
+def generate_image(prompt, out_path, seed=42):
+    """Pick an image backend: local CPU (default/free) | hf | pollinations."""
+    backend = os.environ.get("IMAGE_BACKEND", "").strip().lower()
+    if backend == "pollinations":
+        return pollinations_generate(prompt, out_path, seed=seed)
+    if backend == "hf":
+        try:
+            return hf_generate(prompt, out_path, seed=seed)
+        except Exception as e:
+            log(f"hf failed ({e}); falling back to local")
+    return local_generate(prompt, out_path, seed=seed)
+
+
+def hf_generate(prompt, out_path, seed=42, width=768, height=1344, retries=4):
+    """Generate an image via HuggingFace Inference (deprecated, kept for compatibility)."""
+    out_path = Path(out_path)
+    if out_path.exists() and out_path.stat().st_size > 1000:
+        log(f"skip existing {out_path.name}")
+        return out_path
+    if not HF_KEY:
+        raise RuntimeError("HF_TOKEN not set")
+    url = f"{HF_BASE}/{HF_MODEL}"
+    headers = {"Authorization": f"Bearer {HF_KEY}", "Content-Type": "application/json"}
+    payload = {"inputs": prompt, "parameters": {"width": width, "height": height}}
+    for attempt in range(retries):
+        try:
+            req = urllib.request.Request(
+                url, data=json.dumps(payload).encode("utf-8"),
+                headers=headers, method="POST")
+            with urllib.request.urlopen(req, timeout=300) as r:
+                body = r.read()
+            if len(body) < 1000:
+                raise RuntimeError(f"suspiciously small image: {body[:200]}")
+            out_path.parent.mkdir(parents=True, exist_ok=True)
+            out_path.write_bytes(body)
+            log(f"hf done -> {out_path.name} ({len(body)} bytes)")
+            return out_path
+        except urllib.error.HTTPError as e:
+            detail = e.read().decode("utf-8", "replace")[:300]
+            log(f"hf attempt {attempt} HTTP {e.code}: {detail}")
+            time.sleep(10 * (attempt + 1))
+        except Exception as e:
+            log(f"hf attempt {attempt} failed: {e}")
+            time.sleep(10 * (attempt + 1))
+    raise RuntimeError("HF image generation failed after retries")
+
+
 def pollinations_generate(prompt, out_path, seed=42):
     out_path = Path(out_path)
     if out_path.exists() and out_path.stat().st_size > 1000:
@@ -168,13 +245,13 @@ def pollinations_generate(prompt, out_path, seed=42):
 
 def gen_char(ep):
     out = IMAGES / "char_master.png"
-    pollinations_generate(ep["character_prompt"], out, seed=123)
+    generate_image(ep["character_prompt"], out, seed=123)
     return out
 
 def gen_images(ep):
     for i, shot in enumerate(ep["shots"]):
         out = IMAGES / f"{shot['id']}.png"
-        pollinations_generate(shot["image_prompt"], out, seed=400 + i)
+        generate_image(shot["image_prompt"], out, seed=400 + i)
 
 def gen_clips(ep):
     log("skipping ai clips (using free kenburns)")

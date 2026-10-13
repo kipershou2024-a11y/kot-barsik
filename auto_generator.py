@@ -1,178 +1,177 @@
+#!/usr/bin/env python
+"""Auto-pilot: pick the next Barsik episode, generate it in the Ep1/2 cartoon
+style (free CPU diffusion + Fish voice + ffmpeg), and upload to YouTube.
+
+Env:
+  FISH_API_KEY   required for voice
+  IMAGE_BACKEND  'local' (default here) | 'pollinations' | 'hf'
+  DRY_RUN=1      only write the episode JSON, skip images/voice/upload
+"""
+import datetime
 import json
 import os
 import subprocess
+import sys
 from pathlib import Path
+
 import pipeline
 import yt_upload
 
 ROOT = Path(__file__).resolve().parent
 
-IDEAS = [
+CHARACTER = ("Barsik, a chunky orange tabby cat with a white muzzle, white chest "
+             "and white front paws, big round amber eyes, a small notch in his "
+             "left ear, permanently grumpy deadpan expression")
+STYLE = ("Modern 2D flat cartoon illustration, bold clean black outlines, "
+         "flat vibrant colors, vertical 9:16 composition")
+
+# Compact episode queue. image_prompt is built automatically from `scene`.
+EPISODES = [
     {
-        "episode": 3,
-        "title": "Барсик сдаёт на права",
-        "hook": "БАРСИК СДАЁТ НА ПРАВА",
+        "episode": 4,
+        "title": "Барсик открыл свой бизнес",
+        "hook": "БАРСИК ОТКРЫЛ СВОЙ БИЗНЕС",
+        "outro": "Подпишись — узнаешь, куда Барсик вложил прибыль.",
         "shots": [
-            {
-                "id": "ep3_s1",
-                "image_source": "assets/images/char_master.png",
-                "narration": "Вчера Барсик записался в автошколу. Инспектор был в шоке.",
-                "caption": "Барсик в автошколе"
-            },
-            {
-                "id": "ep3_s2",
-                "image_source": "assets/images/char_master.png",
-                "narration": "Сдавал площадку три раза. Сбил все конусы, но сдал теорию по мурчанию.",
-                "caption": "Сбил все конусы"
-            },
-            {
-                "id": "ep3_s3",
-                "image_source": "assets/images/char_master.png",
-                "narration": "Теперь у него официальные права. В графе особые отметки — любит рыбу.",
-                "caption": "Официальные права"
-            },
-            {
-                "id": "ep3_s4",
-                "image_source": "assets/images/char_master.png",
-                "narration": "Берегитесь дороги. Барсик за рулем и он спешит к миске.",
-                "caption": "Берегитесь дороги!"
-            }
-        ],
-        "outro": "Подпишись — завтра Барсик оформляет ипотеку."
+            {"scene": "sitting behind a cardboard box desk like a shop owner, a handmade sign reading FISH, proud deadpan face",
+             "narration": "Барсик решил, что работать на меня — невыгодно. И открыл свой бизнес. Магазин рыбы.",
+             "caption": "Свой бизнес"},
+            {"scene": "standing proudly next to a small pile of stuffed toy fish and a cardboard cash register",
+             "narration": "Товар он позаимствовал из моего холодильника. Назвал это стартовым капиталом.",
+             "caption": "Стартовый капитал"},
+            {"scene": "a cartoon mouse customer at the counter paying with a shiny coin, Barsik taking the coin with one paw",
+             "narration": "Первый клиент пришёл через час. Соседский мышонок. Купил рыбу за монетку.",
+             "caption": "Первый клиент"},
+            {"scene": "surrounded by many cartoon mouse customers, looking overwhelmed and annoyed, scattered fish toys",
+             "narration": "К вечеру очередь была до кухни. Барсик устал и поднял цены в два раза.",
+             "caption": "Очередь до кухни"},
+            {"scene": "relaxing on a soft cushion on top of a pile of shiny coins, sunglasses on, smug",
+             "narration": "Теперь он бизнесмен. Отдыхает на подушке из монет и не здоровается со мной.",
+             "caption": "Бизнесмен"},
+            {"scene": "looking smug and unrepentant, holding a single shiny coin up, dramatic spotlight",
+             "narration": "И ни о чём не жалеет. Прибыль, говорит, вложил. Только в рыбу. В себя.",
+             "caption": "Ни о чём не жалеет"}
+        ]
+    },
+    {
+        "episode": 5,
+        "title": "Барсик сел на диету",
+        "hook": "БАРСИК СЕЛ НА ДИЕТУ",
+        "outro": "Подпишись — узнаешь, кто съел диетический корм.",
+        "shots": [
+            {"scene": "staring in horror at a tiny bowl with a single green leaf in it, deadpan offended face",
+             "narration": "Ветеринар сказал Барсику похудеть. Барсик сказал, что подумает. Два дня.",
+             "caption": "Надо похудеть"},
+            {"scene": "pushing a full plate of sausages off a table with one paw while looking innocent",
+             "narration": "Начал он с лёгкого. Убрал из рациона всё вкусное. То есть мою еду со стола.",
+             "caption": "Убрал вкусное"},
+            {"scene": "doing cat yoga stretching poses on a rug, a fitness chart on the wall, determined grumpy face",
+             "narration": "Потом записался на фитнес. Каждое утро потягушки и бег за лазерной точкой.",
+             "caption": "Записался на фитнес"},
+            {"scene": "standing on a bathroom scale looking shocked and outraged, tail puffed up",
+             "narration": "Через неделю он встал на весы. И обвинил в результате весы. И меня. И кота с пятого этажа.",
+             "caption": "Весы врут"},
+            {"scene": "secretly eating a sausage under a table at night, guilty wide eyes, dark room",
+             "narration": "А ночью я поймал его возле холодильника. С сосиской. Двенадцатой за вечер.",
+             "caption": "Пойман с сосиской"},
+            {"scene": "satisfied, licking lips, sitting on the scale which still shows the same number, smug",
+             "narration": "Диета, в общем, не задалась. Но он ни о чём не жалеет. И не собирается.",
+             "caption": "Ни о чём не жалеет"}
+        ]
+    },
+    {
+        "episode": 6,
+        "title": "Барсик и мой телефон",
+        "hook": "ЧТО БАРСИК ЗАКАЗАЛ С МОЕГО ТЕЛЕФОНА",
+        "outro": "Подпишись — узнаешь, кому Барсик написал сообщение.",
+        "shots": [
+            {"scene": "sitting on a phone lying on the floor, both front paws tapping the screen, focused devious face",
+             "narration": "Однажды я оставил телефон на диване. На пять минут. Барсик успел многое.",
+             "caption": "Телефон на диване"},
+            {"scene": "a cartoon online shop screen filled with fish, toys and cat beds, Barsik drooling slightly",
+             "narration": "Он открыл магазин зоотоваров и набрал корзину на девять тысяч. Из чистого любопытства.",
+             "caption": "Корзина на 9 000"},
+            {"scene": "holding the phone with a paw, typing a message, sly grin, chat bubbles floating",
+             "narration": "Потом написал моей маме. Что я, цитата, очень скучаю и хочу приехать на выходные.",
+             "caption": "Сообщение маме"},
+            {"scene": "sitting smug next to a phone showing a big map with a route, tiny suitcase beside him",
+             "narration": "Мама приехала на выходные в тот же вечер. С чемоданом и с подарками. Для него.",
+             "caption": "Мама приехала"},
+            {"scene": "cutting a phone screen with a claw while a confused cartoon delivery courier cat stands at the door holding boxes",
+             "narration": "А ещё заказ на девять тысяч привезли. Пять коробок. Курьер тоже был кот. У них получилась дружба.",
+             "caption": "Курьер тоже кот"},
+            {"scene": "lying on a mountain of new toys and boxes, smirking, one paw on the phone, dramatic light",
+             "narration": "И он ни о чём не жалеет. Теперь телефон я прячу. Под подушкой. Он и там находит.",
+             "caption": "Ни о чём не жалеет"}
+        ]
     }
 ]
 
+
+def build_episode(spec):
+    ep = {
+        "series": "Кот Барсик",
+        "episode": spec["episode"],
+        "title": spec["title"],
+        "format": {"w": 1080, "h": 1920, "fps": 30},
+        "hook": spec["hook"],
+        "character": CHARACTER,
+        "character_prompt": f"Full-body 2D cartoon character sheet of {CHARACTER}. "
+                            f"Modern flat cartoon illustration, bold clean black outlines, "
+                            f"flat vibrant colors, plain light mint background, vertical 9:16 composition.",
+        "image_style": STYLE,
+        "shots": [
+            {
+                "id": f"e{spec['episode']}s{i + 1}",
+                "image_prompt": f"{CHARACTER}, {s['scene']}. {STYLE}",
+                "narration": s["narration"],
+                "caption": s["caption"],
+            }
+            for i, s in enumerate(spec["shots"])
+        ],
+        "outro": spec["outro"],
+    }
+    return ep
+
+
+def pick_episode():
+    now = datetime.datetime.utcnow()
+    slot = 0 if now.hour < 14 else 1
+    idx = (now.toordinal() * 2 + slot) % len(EPISODES)
+    return EPISODES[idx]
+
+
 def main():
-    out_dir = Path("out")
-    out_dir.mkdir(exist_ok=True)
-    ep = IDEAS[0]
-    ep["format"] = {"w": 1080, "h": 1920, "fps": 30}
-    ep["character"] = "Barsik"
-    
-    import shutil
-    for shot in ep["shots"]:
-        src = Path(shot["image_source"])
-        dst = pipeline.IMAGES / f"{shot['id']}.png"
-        shutil.copy(src, dst)
-        
-    print(f"Generating Episode {ep['episode']}: {ep['title']}")
+    spec = pick_episode()
+    ep = build_episode(spec)
+    ep_path = ROOT / "episode_auto.json"
+    ep_path.write_text(json.dumps(ep, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"[auto] selected episode {ep['episode']}: {ep['title']}")
+
+    if os.environ.get("DRY_RUN"):
+        print("[auto] DRY_RUN -> wrote", ep_path.name, "and stopping")
+        return
+
+    pipeline.gen_images(ep)
     pipeline.gen_voice(ep)
-    
-    fmt = ep["format"]
-    W, H, FPS = fmt["w"], fmt["h"], fmt["fps"]
-    pipeline.BUILD.mkdir(exist_ok=True)
-    
-    font = pipeline.BUILD / "font.ttf"
-    if not font.exists():
-        for cand in [r"C:\Windows\Fonts\arialbd.ttf", r"C:\Windows\Fonts\arial.ttf"]:
-            if Path(cand).exists():
-                shutil.copy(cand, font)
-                break
+    final = pipeline.assemble(ep)
 
-    segments = []
-    timeline = []
-    t = 0.0
-    for idx, shot in enumerate(ep["shots"]):
-        narr = pipeline.AUDIO / f"{shot['id']}.mp3"
-        ndur = pipeline.probe_duration(narr)
-        dur = max(ndur + 0.55, 0.6)
-        seg = pipeline.BUILD / f"seg_ep3_{idx}.mp4"
-        img = pipeline.IMAGES / f"{shot['id']}.png"
-        
-        frames = max(int(dur * FPS), 2)
-        step = 0.17 / frames
-        vf = (
-            f"scale=2160:3840:force_original_aspect_ratio=increase,"
-            f"crop=2160:3840,"
-            f"zoompan=z='min(zoom+{step:.6f},1.17)':d=1:"
-            f"x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':"
-            f"s={W}x{H}:fps={FPS},setsar=1,format=yuv420p"
-        )
-        pipeline._ffmpeg([
-            "-loop", "1", "-framerate", str(FPS), "-t", f"{dur:.3f}",
-            "-i", str(img), "-i", str(narr),
-            "-filter_complex", f"[0:v]{vf}[v]",
-            "-map", "[v]", "-map", "1:a", "-t", f"{dur:.3f}",
-            "-c:v", "libx264", "-preset", "medium", "-crf", "20",
-            "-c:a", "aac", "-b:a", "160k", "-ar", "44100", "-ac", "2",
-            str(seg),
-        ])
-        segments.append(seg)
-        cap = shot.get("caption") or shot.get("narration")
-        timeline.append((t, t + ndur, cap))
-        t += dur
-
-    outro = pipeline.AUDIO / "outro.mp3"
-    if outro.exists():
-        last_shot = ep["shots"][-1]
-        odur = pipeline.probe_duration(outro)
-        img = pipeline.IMAGES / f"{last_shot['id']}.png"
-        seg = pipeline.BUILD / "seg_ep3_outro.mp4"
-        frames = max(int((odur + 0.5) * FPS), 2)
-        step = 0.17 / frames
-        vf = (
-            f"scale=2160:3840:force_original_aspect_ratio=increase,"
-            f"crop=2160:3840,"
-            f"zoompan=z='min(zoom+{step:.6f},1.17)':d=1:"
-            f"x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':"
-            f"s={W}x{H}:fps={FPS},setsar=1,format=yuv420p"
-        )
-        pipeline._ffmpeg([
-            "-loop", "1", "-framerate", str(FPS), "-t", f"{odur + 0.5:.3f}",
-            "-i", str(img), "-i", str(outro),
-            "-filter_complex", f"[0:v]{vf}[v]",
-            "-map", "[v]", "-map", "1:a", "-t", f"{odur + 0.5:.3f}",
-            "-c:v", "libx264", "-preset", "medium", "-crf", "20",
-            "-c:a", "aac", "-b:a", "160k", "-ar", "44100", "-ac", "2",
-            str(seg),
-        ])
-        timeline.append((t, t + odur, ep["outro"]))
-        segments.append(seg)
-
-    lst = pipeline.BUILD / "concat3.txt"
-    lst.write_text("".join(f"file '{s.name}'\n" for s in segments), encoding="utf-8")
-    joined = pipeline.BUILD / "joined3.mp4"
-    pipeline._ffmpeg(["-f", "concat", "-safe", "0", "-i", "concat3.txt", "-c", "copy", joined.name], cwd=pipeline.BUILD)
-
-    filters = []
-    for i, (a, b, cap) in enumerate(timeline):
-        txt = pipeline.BUILD / f"cap3_{i}.txt"
-        txt.write_text(cap, encoding="utf-8")
-        filters.append(
-            f"drawtext=fontfile=font.ttf:textfile=cap3_{i}.txt:"
-            f"fontcolor=white:fontsize=52:line_spacing=8:"
-            f"borderw=5:bordercolor=black@0.85:"
-            f"box=0:x=(w-text_w)/2:y=h-420:"
-            f"enable='between(t,{a:.2f},{b:.2f})'"
-        )
-    if ep.get("hook"):
-        (pipeline.BUILD / "hook3.txt").write_text(ep["hook"], encoding="utf-8")
-        filters.append(
-            "drawtext=fontfile=font.ttf:textfile=hook3.txt:"
-            "fontcolor=0xFFE24B:fontsize=72:borderw=6:bordercolor=black@0.9:"
-            "x=(w-text_w)/2:y=150:enable='lt(t,4)'"
-        )
-    final_mp4 = ROOT / "out" / f"episode03.mp4"
-    pipeline._ffmpeg([
-        "-i", joined.name,
-        "-vf", ",".join(filters),
-        "-c:v", "libx264", "-preset", "medium", "-crf", "19", "-pix_fmt", "yuv420p",
-        "-c:a", "copy",
-        str(final_mp4),
-    ], cwd=pipeline.BUILD)
-    
-    thumb = Path("build/auto_thumb3.jpg")
+    thumb = pipeline.BUILD / "auto_thumb.jpg"
     subprocess.run([
-        "ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-ss", "5", "-i", str(final_mp4),
-        "-frames:v", "1", "-vf", "scale=720:1280", str(thumb)
+        "ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-ss", "5",
+        "-i", str(final), "-frames:v", "1", "-vf", "scale=720:1280", str(thumb)
     ])
-    
-    if Path("yt_token.json").exists():
+
+    if (ROOT / "yt_token.json").exists():
         title = f"{ep['title']} 🐱 #shorts #кот #мультик"
-        desc = f"Новые приключения кота Барсика! Подписывайся на канал! #shorts #котбарсик #мультик #юмор #котики"
-        tags = "shorts,кот барсик,мультик про кота,котики,смешной кот,юмор"
-        vid = yt_upload.upload_video(str(final_mp4), title, desc, tags.split(","), 23, str(thumb), "public")
-        print(f"Uploaded Episode 3 successfully: https://youtu.be/{vid}")
+        desc = ("Новые приключения кота Барсика! Подписывайся. "
+                "#shorts #котбарсик #мультик #юмор #котики")
+        tags = "shorts,кот барсик,мультик про кота,котики,смешной кот,юмор".split(",")
+        vid = yt_upload.upload_video(str(final), title, desc, tags, 23, str(thumb), "public")
+        print(f"[auto] uploaded -> https://youtu.be/{vid}")
+
+    return ep
+
 
 if __name__ == "__main__":
     main()

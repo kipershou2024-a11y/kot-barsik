@@ -28,7 +28,7 @@ AUTH_URI = "https://accounts.google.com/o/oauth2/v2/auth"
 YT_API = "https://www.googleapis.com/youtube/v3"
 YT_UPLOAD = "https://www.googleapis.com/upload/youtube/v3"
 REDIRECT = "urn:ietf:wg:oauth:2.0:oob"
-SCOPES = "https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly"
+SCOPES = "https://www.googleapis.com/auth/youtube"
 UA = "curl/8.21.0"
 
 
@@ -157,13 +157,29 @@ def upload_video(file, title, desc, tags, category, thumb=None, privacy="public"
     print(f"[upload] video id {vid} -> https://youtu.be/{vid}")
     if thumb:
         thumb_path = Path(thumb)
-        th_headers = dict(_api_headers())
-        th_headers["Content-Type"] = "image/jpeg"
-        st, body, _ = _request(
-            f"{YT_UPLOAD}/thumbnails/set?videoId={vid}", method="POST",
-            headers=th_headers, binary=thumb_path.read_bytes())
-        print(f"[upload] thumbnail set ({st})")
+        try:
+            th_headers = dict(_api_headers())
+            th_headers["Content-Type"] = "image/jpeg"
+            st, body, _ = _request(
+                f"{YT_UPLOAD}/thumbnails/set?videoId={vid}", method="POST",
+                headers=th_headers, binary=thumb_path.read_bytes())
+            print(f"[upload] thumbnail set ({st})")
+        except Exception as e:
+            print(f"[upload] thumbnail skipped (channel not verified): {e}")
     return vid
+
+
+def set_privacy(video_id, privacy):
+    body = {"id": video_id, "status": {"privacyStatus": privacy}}
+    st, resp, _ = _request(f"{YT_API}/videos?part=status", method="PUT",
+                           headers=_api_headers(), data=body)
+    return json.loads(resp.decode("utf-8"))
+
+
+def delete_video(video_id):
+    st, resp, _ = _request(f"{YT_API}/videos?id={video_id}", method="DELETE",
+                           headers=_api_headers())
+    return st
 
 
 def main():
@@ -179,6 +195,14 @@ def main():
         print("channel:", whoami())
     elif cmd == "status":
         print("channel:", whoami())
+    elif cmd == "delete":
+        if len(args) < 2:
+            raise SystemExit("usage: yt_upload.py delete <videoId>")
+        print("deleted:", delete_video(args[1]))
+    elif cmd == "privacy":
+        if len(args) < 3:
+            raise SystemExit("usage: yt_upload.py privacy <videoId> <public|unlisted|private>")
+        print(set_privacy(args[1], args[2]))
     elif cmd == "upload":
         if len(args) < 2:
             raise SystemExit("usage: yt_upload.py upload <file> --title ... --desc ... --tags a,b,c --category N [--thumb p] [--private]")
