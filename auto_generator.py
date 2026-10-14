@@ -1,15 +1,20 @@
 #!/usr/bin/env python
-"""Auto-pilot: pick the next Barsik episode, generate it in the Ep1/2 cartoon
-style (free CPU diffusion + Fish voice + ffmpeg), and upload to YouTube.
+"""Batch-prepare Barsik episodes and upload one per day.
+
+Commands:
+  make <N>     generate episode N -> queue/EPNN.mp4 (+ EPNN.json metadata)
+  batch        generate every episode in EPISODES that is not queued yet
+  upload       upload the next queued episode (lowest number) and dequeue it
+  (no args)    same as upload   (used by the daily GitHub Action)
 
 Env:
-  FISH_API_KEY   required for voice
+  FISH_API_KEY   required for make/batch
   IMAGE_BACKEND  'local' (default here) | 'pollinations' | 'hf'
-  DRY_RUN=1      only write the episode JSON, skip images/voice/upload
+  DRY_RUN=1      show what would happen without generating/uploading
 """
-import datetime
 import json
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -18,12 +23,15 @@ import pipeline
 import yt_upload
 
 ROOT = Path(__file__).resolve().parent
+QUEUE = ROOT / "queue"
 
 CHARACTER = ("Barsik, a chunky orange tabby cat with a white muzzle, white chest "
              "and white front paws, big round amber eyes, a small notch in his "
              "left ear, permanently grumpy deadpan expression")
 STYLE = ("Modern 2D flat cartoon illustration, bold clean black outlines, "
          "flat vibrant colors, vertical 9:16 composition")
+
+TAGS = "shorts,кот барсик,мультик про кота,котики,смешной кот,юмор,кот"
 
 # Compact episode queue. image_prompt is built automatically from `scene`.
 EPISODES = [
@@ -80,28 +88,80 @@ EPISODES = [
         ]
     },
     {
-        "episode": 6,
-        "title": "Барсик и мой телефон",
-        "hook": "ЧТО БАРСИК ЗАКАЗАЛ С МОЕГО ТЕЛЕФОНА",
-        "outro": "Подпишись — узнаешь, кому Барсик написал сообщение.",
+        "episode": 7,
+        "title": "Барсик пошёл в спортзал",
+        "hook": "БАРСИК ЗАПИСАЛСЯ В КАЧАЛКУ",
+        "outro": "Подпишись — узнаешь, сколько Барсик поднял на самом деле.",
         "shots": [
-            {"scene": "sitting on a phone lying on the floor, both front paws tapping the screen, focused devious face",
-             "narration": "Однажды я оставил телефон на диване. На пять минут. Барсик успел многое.",
-             "caption": "Телефон на диване"},
-            {"scene": "a cartoon online shop screen filled with fish, toys and cat beds, Barsik drooling slightly",
-             "narration": "Он открыл магазин зоотоваров и набрал корзину на девять тысяч. Из чистого любопытства.",
-             "caption": "Корзина на 9 000"},
-            {"scene": "holding the phone with a paw, typing a message, sly grin, chat bubbles floating",
-             "narration": "Потом написал моей маме. Что я, цитата, очень скучаю и хочу приехать на выходные.",
-             "caption": "Сообщение маме"},
-            {"scene": "sitting smug next to a phone showing a big map with a route, tiny suitcase beside him",
-             "narration": "Мама приехала на выходные в тот же вечер. С чемоданом и с подарками. Для него.",
-             "caption": "Мама приехала"},
-            {"scene": "cutting a phone screen with a claw while a confused cartoon delivery courier cat stands at the door holding boxes",
-             "narration": "А ещё заказ на девять тысяч привезли. Пять коробок. Курьер тоже был кот. У них получилась дружба.",
-             "caption": "Курьер тоже кот"},
-            {"scene": "lying on a mountain of new toys and boxes, smirking, one paw on the phone, dramatic light",
-             "narration": "И он ни о чём не жалеет. Теперь телефон я прячу. Под подушкой. Он и там находит.",
+            {"scene": "standing in front of a gym entrance sign with a tiny gym bag, determined grumpy face",
+             "narration": "Барсик решил, что пора стать сильным. И записался в качалку. Вместе со мной.",
+             "caption": "В качалку"},
+            {"scene": "wearing a tiny cartoon tank top, lifting a small pink dumbbell with both paws, straining",
+             "narration": "Первый подход. Гантель два килограмма. Барсик держал её минуту и очень собой гордился.",
+             "caption": "Гантель 2 кг"},
+            {"scene": "running on a treadmill with tongue out, funny tired face",
+             "narration": "Потом беговая дорожка. Барсик бежал тридцать секунд и объявил перерыв на обед. На два часа.",
+             "caption": "Беговая дорожка"},
+            {"scene": "sitting on a bench staring at a muscular cartoon cat flexing nearby, unimpressed",
+             "narration": "Рядом качался здоровый кот. Барсик сказал, что мышцы — не главное. Главное — харизма.",
+             "caption": "Мышцы не главное"},
+            {"scene": "sleeping on a yoga mat in the middle of the gym, other cats stepping around him",
+             "narration": "Тренировку Барсик закончил сном на коврике. Все ходили вокруг него на цыпочках.",
+             "caption": "Сон на коврике"},
+            {"scene": "smug, holding a protein shake, one arm raised like a winner",
+             "narration": "И ни о чём не жалеет. Говорит, качалка — это его. Особенно диван рядом с ней.",
+             "caption": "Ни о чём не жалеет"}
+        ]
+    },
+    {
+        "episode": 8,
+        "title": "Барсик приготовил ужин",
+        "hook": "БАРСИК ПРИГОТОВИЛ МНЕ УЖИН",
+        "outro": "Подпишись — узнаешь, что Барсик варил на самом деле.",
+        "shots": [
+            {"scene": "standing on a kitchen table wearing a small chef hat and apron, proud deadpan face",
+             "narration": "Однажды Барсик решил, что я плохо питаюсь. И взял готовку на себя.",
+             "caption": "Повар Барсик"},
+            {"scene": "a huge mess in the kitchen, flour everywhere, Barsik in the middle holding a whisk",
+             "narration": "Начал он с муки. Половина муки оказалась на Барсике. Половина — на кухне.",
+             "caption": "Полкухни в муке"},
+            {"scene": "stirring a smoking pot with a wooden spoon, alarmed surprised face",
+             "narration": "Потом что-то варил. Что именно — не признался. Но запах был очень смелый.",
+             "caption": "Смелый запах"},
+            {"scene": "a plate with a single burnt sausage cut into fancy shapes, garnished with one leaf",
+             "narration": "В итоге на тарелке оказалась одна подгоревшая сосиска. Нарезанная красиво. С листиком.",
+             "caption": "Сосиска с листиком"},
+            {"scene": "sitting next to a human at the table watching him eat, expectant proud face",
+             "narration": "Он сел напротив и смотрел, как я это ем. Отказаться было страшно.",
+             "caption": "Смотрит, как я ем"},
+            {"scene": "eating a big piece of fish contentedly while a human holds an empty plate, smug",
+             "narration": "И ни о чём не жалуется. Правда, сам он ужинал рыбой. Из моего холодильника. Опять.",
+             "caption": "Ни о чём не жалеет"}
+        ]
+    },
+    {
+        "episode": 9,
+        "title": "Барсик привёл друга",
+        "hook": "БАРСИК ПРИВЁЛ ДОМОЙ ДРУГА",
+        "outro": "Подпишись — узнаешь, вернётся ли серый друг.",
+        "shots": [
+            {"scene": "standing at a front door with a scruffy grey cartoon stray cat beside him, both flat expressions",
+             "narration": "Барсик как-то пришёл домой не один. С другом. Друг был серый, лохматый и очень довольный.",
+             "caption": "Привёл друга"},
+            {"scene": "two cats sitting on a sofa side by side staring at a human, a snack bowl between them",
+             "narration": "Он сказал, что это его новый лучший друг. И что теперь они всё делают вместе. Включая мою еду.",
+             "caption": "Лучший друг"},
+            {"scene": "Barsik looking jealous while the grey cat gets petted by a human hand",
+             "narration": "Но через час все поглаживания достались другу. И Барсик начал ревновать. Тихо. И опасно.",
+             "caption": "Ревность"},
+            {"scene": "two cats sitting with backs turned to each other, pouting, arms crossed",
+             "narration": "К вечеру они поссорились. Из-за места на диване. И из-за моей коленки.",
+             "caption": "Поссорились"},
+            {"scene": "night, the grey cat quietly leaving through a window, Barsik watching smug from the doorway",
+             "narration": "Друг обиделся и ушёл в окно. Барсик помахал ему лапкой. Довольный.",
+             "caption": "Ушёл в окно"},
+            {"scene": "Barsik alone, stretched out across the whole sofa, smug",
+             "narration": "И ни о чём не жалеет. Диван снова только его. Дружба, говорит, это такое.",
              "caption": "Ни о чём не жалеет"}
         ]
     }
@@ -134,43 +194,101 @@ def build_episode(spec):
     return ep
 
 
-def pick_episode():
-    now = datetime.datetime.utcnow()
-    slot = 0 if now.hour < 14 else 1
-    idx = (now.toordinal() * 2 + slot) % len(EPISODES)
-    return EPISODES[idx]
+def _spec(n):
+    for s in EPISODES:
+        if s["episode"] == n:
+            return s
+    raise SystemExit(f"no episode {n} defined (have {[s['episode'] for s in EPISODES]})")
 
 
-def main():
-    spec = pick_episode()
-    ep = build_episode(spec)
-    ep_path = ROOT / "episode_auto.json"
-    ep_path.write_text(json.dumps(ep, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"[auto] selected episode {ep['episode']}: {ep['title']}")
+def _desc(ep):
+    return (f"Новые приключения кота Барсика: {ep['title']}! "
+            f"Подписывайся, дальше ещё смешнее.\n\n#shorts #котбарсик #мультик #юмор #котики")
 
+
+def make_one(n):
+    ep = build_episode(_spec(n))
+    QUEUE.mkdir(exist_ok=True)
+    mp4 = QUEUE / f"EP{n:02d}.mp4"
+    meta = QUEUE / f"EP{n:02d}.json"
+    if mp4.exists():
+        print(f"[auto] EP{n:02d} already queued, skip")
+        return mp4
     if os.environ.get("DRY_RUN"):
-        print("[auto] DRY_RUN -> wrote", ep_path.name, "and stopping")
-        return
-
+        print(f"[auto] DRY_RUN: would generate EP{n:02d} {ep['title']}")
+        return mp4
+    print(f"[auto] generating EP{n:02d} '{ep['title']}' ...", flush=True)
     pipeline.gen_images(ep)
     pipeline.gen_voice(ep)
     final = pipeline.assemble(ep)
+    shutil.copy(final, mp4)
+    meta.write_text(json.dumps({
+        "episode": n, "title": ep["title"], "desc": _desc(ep),
+        "tags": TAGS.split(","), "hook": ep["hook"],
+    }, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"[auto] queued -> {mp4.name} ({mp4.stat().st_size} bytes)")
+    return mp4
 
+
+def cmd_batch():
+    for spec in EPISODES:
+        make_one(spec["episode"])
+
+
+def _thumb_from(mp4):
+    pipeline.BUILD.mkdir(exist_ok=True)
     thumb = pipeline.BUILD / "auto_thumb.jpg"
     subprocess.run([
         "ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-ss", "5",
-        "-i", str(final), "-frames:v", "1", "-vf", "scale=720:1280", str(thumb)
+        "-i", str(mp4), "-frames:v", "1", "-vf", "scale=720:1280", str(thumb)
     ])
+    return thumb if thumb.exists() else None
 
-    if (ROOT / "yt_token.json").exists():
-        title = f"{ep['title']} 🐱 #shorts #кот #мультик"
-        desc = ("Новые приключения кота Барсика! Подписывайся. "
-                "#shorts #котбарсик #мультик #юмор #котики")
-        tags = "shorts,кот барсик,мультик про кота,котики,смешной кот,юмор".split(",")
-        vid = yt_upload.upload_video(str(final), title, desc, tags, 23, str(thumb), "public")
-        print(f"[auto] uploaded -> https://youtu.be/{vid}")
 
-    return ep
+def cmd_upload():
+    QUEUE.mkdir(exist_ok=True)
+    files = sorted(QUEUE.glob("EP*.mp4"))
+    if not files:
+        print("[auto] queue empty - nothing to upload")
+        return None
+    mp4 = files[0]
+    meta_path = mp4.with_suffix(".json")
+    meta = json.loads(meta_path.read_text(encoding="utf-8")) if meta_path.exists() else {}
+    ep_n = meta.get("episode")
+    title = meta.get("title") or mp4.stem
+    title = f"{title} 🐱 #shorts #кот #мультик"
+    desc = meta.get("desc") or _desc({"title": title})
+    tags = meta.get("tags") or TAGS.split(",")
+
+    if os.environ.get("DRY_RUN"):
+        print(f"[auto] DRY_RUN: would upload {mp4.name} as '{title}'")
+        return None
+
+    thumb = _thumb_from(mp4)
+    if not (ROOT / "yt_token.json").exists():
+        raise SystemExit("yt_token.json missing (restore from secret)")
+    vid = yt_upload.upload_video(str(mp4), title, desc, tags, 23,
+                                 str(thumb) if thumb else None, "public")
+    print(f"[auto] uploaded EP{ep_n} -> https://youtu.be/{vid}")
+    mp4.unlink()
+    if meta_path.exists():
+        meta_path.unlink()
+    print(f"[auto] dequeued {mp4.name}; {len(sorted(QUEUE.glob('EP*.mp4')))} left")
+    return vid
+
+
+def main():
+    cmd = sys.argv[1] if len(sys.argv) > 1 else "upload"
+    if cmd == "make":
+        if len(sys.argv) < 3:
+            raise SystemExit("usage: auto_generator.py make <episodeNumber>")
+        make_one(int(sys.argv[2]))
+    elif cmd == "batch":
+        cmd_batch()
+    elif cmd == "upload":
+        cmd_upload()
+    else:
+        raise SystemExit(__doc__)
 
 
 if __name__ == "__main__":

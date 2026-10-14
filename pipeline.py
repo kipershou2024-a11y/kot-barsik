@@ -264,7 +264,7 @@ def gen_voice(ep):
     for shot in ep["shots"]:
         fish_tts(shot["narration"], AUDIO / f"{shot['id']}.mp3")
     if ep.get("outro"):
-        fish_tts(ep["outro"], AUDIO / "outro.mp3")
+        fish_tts(ep["outro"], AUDIO / f"outro_e{ep['episode']}.mp3")
 
 
 # ---------------------------------------------------------------- assembly
@@ -351,7 +351,9 @@ def assemble(ep):
         log(f"segment {shot['id']}: {dur:.2f}s")
 
     # optional outro tail on the last visual
-    outro = AUDIO / "outro.mp3"
+    outro = AUDIO / f"outro_e{ep['episode']}.mp3"
+    if not outro.exists():
+        outro = AUDIO / "outro.mp3"
     if outro.exists():
         last_shot = ep["shots"][-1]
         odur = probe_duration(outro)
