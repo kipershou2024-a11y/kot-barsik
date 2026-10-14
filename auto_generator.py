@@ -24,6 +24,7 @@ import yt_upload
 
 ROOT = Path(__file__).resolve().parent
 QUEUE = ROOT / "queue"
+UPLOADED_PATH = QUEUE / "uploaded.json"
 
 CHARACTER = ("Barsik, a chunky orange tabby cat with a white muzzle, white chest "
              "and white front paws, big round amber eyes, a small notch in his "
@@ -164,6 +165,136 @@ EPISODES = [
              "narration": "И ни о чём не жалеет. Диван снова только его. Дружба, говорит, это такое.",
              "caption": "Ни о чём не жалеет"}
         ]
+    },
+    {
+        "episode": 10,
+        "title": "Барсик против пылесоса",
+        "hook": "БАРСИК ПРОТИВ ПЫЛЕСОСА",
+        "outro": "Подпишись — узнаешь, кто победил в финале.",
+        "shots": [
+            {"scene": "standing frozen with wide eyes and fur on end, staring at a cartoon vacuum cleaner",
+             "narration": "У Барсика есть один заклятый враг. Не собака. Не вода. Пылесос.",
+             "caption": "Заклятый враг"},
+            {"scene": "hiding behind a sofa peeking nervously at a vacuum cleaner",
+             "narration": "Каждую уборку он прячется. Как будто пылесос пришёл именно за ним.",
+             "caption": "Прячется"},
+            {"scene": "perched crammed on top of the very highest wardrobe shelf, scared",
+             "narration": "Однажды он забрался на самый верх шкафа. А пылесос остался внизу. Гудеть.",
+             "caption": "На верх шкафа"},
+            {"scene": "hissing at the vacuum cleaner from a safe distance, back arched",
+             "narration": "Потом решил атаковать. Шипел. На расстоянии. Три метра.",
+             "caption": "Шипит издалека"},
+            {"scene": "riding on top of the vacuum cleaner while a human pushes it, surprised delighted face",
+             "narration": "А потом... поехал на нём. И знаете что? Ему понравилось.",
+             "caption": "А потом поехал"},
+            {"scene": "sitting proudly on the parked vacuum cleaner, smug",
+             "narration": "И ни о чём не жалеет. Теперь просит катать его каждый день. Вместо уборки.",
+             "caption": "Ни о чём не жалеет"}
+        ]
+    },
+    {
+        "episode": 11,
+        "title": "Барсик будит меня в 4 утра",
+        "hook": "БАРСИК БУДИТ МЕНЯ В 4 УТРА",
+        "outro": "Подпишись — узнаешь, во сколько Барсик ложится спать.",
+        "shots": [
+            {"scene": "sitting on a sleeping human's chest at night, staring, a wall clock shows four o'clock",
+             "narration": "У Барсика есть будильник. Это его лапы. И моя грудная клетка. В четыре утра.",
+             "caption": "4 утра"},
+            {"scene": "meowing loudly right next to a sleeping person in the dark, mouth wide open",
+             "narration": "Сначала он мяукает. Один раз. Потом второй. Потом так, будто его режут. Спойлер: не режут.",
+             "caption": "Мяу"},
+            {"scene": "casually knocking a glass off a nightstand in the dark, dramatic",
+             "narration": "Если не встаю, он роняет со стола что-нибудь. Что-нибудь. Что подороже.",
+             "caption": "Роняет со стола"},
+            {"scene": "sitting innocently on the kitchen floor next to a completely full food bowl",
+             "narration": "Я встаю. Включаю свет. И что я вижу? Полную миску еды. Полную.",
+             "caption": "Миска полная"},
+            {"scene": "eating calmly at night while a tired human stands nearby, smug",
+             "narration": "Он просто хотел компании. И чтобы я постоял рядом. Полчаса. В четыре утра.",
+             "caption": "Хотел компании"},
+            {"scene": "sleeping peacefully curled on a bed in bright daylight while a tired human works",
+             "narration": "Днём он спит. Я — на работе. И ни о чём не жалеет.",
+             "caption": "Ни о чём не жалеет"}
+        ]
+    },
+    {
+        "episode": 12,
+        "title": "Барсик и коробка",
+        "hook": "БАРСИК И КОРОБКА",
+        "outro": "Подпишись — узнаешь, что будет, когда коробок станет десять.",
+        "shots": [
+            {"scene": "surrounded by expensive cat toys, ignoring them all, staring at an empty cardboard box",
+             "narration": "Я купил Барсику кучу дорогих игрушек. Он выбрал коробку.",
+             "caption": "Выбрал коробку"},
+            {"scene": "squeezing into a too-small cardboard box, half hanging out, determined",
+             "narration": "Коробка была явно мала. Барсика это не остановило.",
+             "caption": "Коробка мала"},
+            {"scene": "sitting triumphantly inside the box with only head showing, smug",
+             "narration": "Он сидел в ней весь день. Как будто это был трон.",
+             "caption": "Как трон"},
+            {"scene": "a bigger box appears and Barsik immediately moves into it",
+             "narration": "Я принёс коробку побольше. Он переехал. Мгновенно.",
+             "caption": "Переехал"},
+            {"scene": "several stacked boxes with Barsik sitting in the top one like a castle",
+             "narration": "Так у него появился многоэтажный дом. Из коробок. С видом на кухню.",
+             "caption": "Дом из коробок"},
+            {"scene": "chewing the corner of a cardboard box, satisfied, sitting inside it, smug",
+             "narration": "И ни о чём не жалеет. Игрушки, говорит, для слабаков. Коробка — это жизнь.",
+             "caption": "Ни о чём не жалеет"}
+        ]
+    },
+    {
+        "episode": 13,
+        "title": "Барсик сел за работу",
+        "hook": "БАРСИК СЕЛ ЗА РАБОТУ",
+        "outro": "Подпишись — узнаешь, какую должность Барсик себе придумал.",
+        "shots": [
+            {"scene": "sitting on a desk chair in front of a laptop, serious face, tiny glasses",
+             "narration": "Барсик решил, что мне нужна помощь. На удалёнке. И сел за мой ноутбук.",
+             "caption": "Сел за работу"},
+            {"scene": "walking across a keyboard while random letters appear on the screen",
+             "narration": "Сначала он прошёлся по клавиатуре. Получилось сообщение. Начальнику. Из двадцати символов.",
+             "caption": "Прошёлся по клавиатуре"},
+            {"scene": "staring intensely at a screen full of graphs, one paw on the computer mouse",
+             "narration": "Потом посмотрел на графики. Сказал, что тут всё неправильно. И я почти согласен.",
+             "caption": "Графики неправильные"},
+            {"scene": "lying on top of a warm laptop blocking the screen, sleepy",
+             "narration": "К обеду он улёгся прямо на ноутбук. Ноутбук тёплый. Это главное.",
+             "caption": "Лёг на ноутбук"},
+            {"scene": "a video meeting on screen with many confused cat faces, Barsik's tail in the camera",
+             "narration": "Во время созвона в кадре появился его хвост. Встреча была посвящена коту. Не работе.",
+             "caption": "Хвост в кадре"},
+            {"scene": "sitting on the closed laptop with a coffee mug beside, smug",
+             "narration": "И ни о чём не жалеет. Теперь он мой начальник. И требует рыбу как зарплату.",
+             "caption": "Ни о чём не жалеет"}
+        ]
+    },
+    {
+        "episode": 14,
+        "title": "Барсик не любит купаться",
+        "hook": "БАРСИК НЕ ЛЮБИТ КУПАТЬСЯ",
+        "outro": "Подпишись — узнаешь, во что Барсик верит после купания.",
+        "shots": [
+            {"scene": "standing at the sight of a bathtub full of water, horrified wide eyes",
+             "narration": "Есть три вещи, которых Барсик боится. Пылесос. Понедельник. И вода.",
+             "caption": "Боится воды"},
+            {"scene": "hiding under a bed in the dark with only glowing eyes visible, a bathtub in the background",
+             "narration": "Узнав о купании, он спрятался под кроватью. На три часа.",
+             "caption": "Под кроватью"},
+            {"scene": "held by a human over the bathtub with all legs spread out like a starfish, distressed",
+             "narration": "Когда его всё-таки поймали, он раздвинул лапы. Как морская звезда. Чтобы не влез.",
+             "caption": "Как морская звезда"},
+            {"scene": "in the water with a betrayed face and wet fur",
+             "narration": "В воде он сделал вид, что это конец. Прощание было долгим. Купание длилось пять минут.",
+             "caption": "Всё кончено"},
+            {"scene": "wrapped in a towel, grumpy, drying off",
+             "narration": "Потом он сох. Два часа. В моей любимой простыне. С видом победителя.",
+             "caption": "Сох в простыне"},
+            {"scene": "freshly clean and fluffy, ignoring a human, smug on a couch",
+             "narration": "И ни о чём не жалеет. Чистый кот. И мокрый диван. Но он доволен.",
+             "caption": "Ни о чём не жалеет"}
+        ]
     }
 ]
 
@@ -206,11 +337,30 @@ def _desc(ep):
             f"Подписывайся, дальше ещё смешнее.\n\n#shorts #котбарсик #мультик #юмор #котики")
 
 
+def _uploaded():
+    if UPLOADED_PATH.exists():
+        try:
+            return set(json.loads(UPLOADED_PATH.read_text(encoding="utf-8")))
+        except Exception:
+            return set()
+    return set()
+
+
+def _mark_uploaded(n):
+    done = _uploaded()
+    done.add(int(n))
+    UPLOADED_PATH.parent.mkdir(exist_ok=True)
+    UPLOADED_PATH.write_text(json.dumps(sorted(done), indent=2), encoding="utf-8")
+
+
 def make_one(n):
     ep = build_episode(_spec(n))
     QUEUE.mkdir(exist_ok=True)
     mp4 = QUEUE / f"EP{n:02d}.mp4"
     meta = QUEUE / f"EP{n:02d}.json"
+    if n in _uploaded():
+        print(f"[auto] EP{n:02d} already uploaded, skip")
+        return mp4
     if mp4.exists():
         print(f"[auto] EP{n:02d} already queued, skip")
         return mp4
@@ -273,6 +423,8 @@ def cmd_upload():
     mp4.unlink()
     if meta_path.exists():
         meta_path.unlink()
+    if ep_n:
+        _mark_uploaded(ep_n)
     print(f"[auto] dequeued {mp4.name}; {len(sorted(QUEUE.glob('EP*.mp4')))} left")
     return vid
 
