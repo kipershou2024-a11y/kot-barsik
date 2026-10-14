@@ -20,7 +20,6 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-CRED_PATH = Path(r"C:\Users\odino\Downloads\client_secret_309133304446_gcqk6tj338pbqmrblo5rfoslf3qnnddj_apps.json")
 TOKEN_PATH = ROOT / "yt_token.json"
 
 TOKEN_URI = "https://oauth2.googleapis.com/token"
@@ -33,7 +32,21 @@ UA = "curl/8.21.0"
 
 
 def creds():
-    j = json.loads(CRED_PATH.read_text(encoding="utf-8"))
+    raw = os.environ.get("YT_CLIENT_SECRET")
+    if raw:
+        j = json.loads(raw)
+    else:
+        candidates = [
+            Path(os.environ["YT_CLIENT_SECRET_FILE"]) if os.environ.get("YT_CLIENT_SECRET_FILE") else None,
+            ROOT / "client_secret.json",
+            Path.home() / "Downloads" / "client_secret_309133304446_gcqk6tj338pbqmrblo5rfoslf3qnnddj_apps.json",
+        ]
+        for c in candidates:
+            if c and c.exists():
+                j = json.loads(c.read_text(encoding="utf-8"))
+                break
+        else:
+            raise SystemExit("No Google client secret found (set YT_CLIENT_SECRET or add client_secret.json)")
     install = j.get("installed") or j.get("web")
     return install["client_id"], install["client_secret"]
 

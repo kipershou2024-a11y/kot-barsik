@@ -42,6 +42,7 @@ jobs:
       - name: Generate and upload episode (free CPU diffusion + Fish TTS)
         env:
           FISH_API_KEY: ${{ secrets.FISH_API_KEY }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET_JSON }}
           IMAGE_BACKEND: local
           HF_HUB_DISABLE_TELEMETRY: '1'
           HF_HUB_DISABLE_PROGRESS_BARS: '1'
